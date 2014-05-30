@@ -1,10 +1,10 @@
 import pygame
 import sys
 
-RIGHT = 0
+RIGHT = 360
 LEFT = 180
 UP = 90
-DOWN = -90
+DOWN = 270
 
 
 class Base(pygame.sprite.Sprite):
@@ -22,31 +22,39 @@ class Base(pygame.sprite.Sprite):
 class Tanks(Base):
     all_tanks = pygame.sprite.Group()
 
-    def __init__(self, x, y, image_string):
+    def __init__(self, x, y, image_string, speed):
         Base.__init__(self, x, y, image_string)
         Tanks.all_tanks.add(self)
-        self.velocity = [0, 0]
+        self.speed = speed
+        self.velocity = {'horizontal':0, 'vertical': 0}
+        self.width = self.rect[2]
+        self.height = self.rect[3]
+        self.image = pygame.image.load(image_string)
         self.left_faced = pygame.transform.rotate(self.image, LEFT)
         self.right_faced = pygame.transform.rotate(self.image, RIGHT)
         self.up_faced = pygame.transform.rotate(self.image, UP)
         self.down_faced = pygame.transform.rotate(self.image, DOWN)
 
-    def motion(self, direction):
-        if direction == LEFT:
-            self.image = self.left_faced
-            self.velocity[0] = -3
-            self.velocity[1] = 0
-        elif direction == RIGHT:
-            self.image = self.right_faced
-            self.velocity[0] = 3
-            self.velocity[1] = 0
-        elif direction == UP:
-            self.image = self.up_faced
-            self.velocity[0] = 0
-            self.velocity[1] = -3
-        elif direction == DOWN:
-            self.image = self.down_faced
-            self.velocity[0] = 0
-            self.velocity[1] = 3
-        self.rect.x += self.velocity[0]
-        self.rect.y += self.velocity[1]
+
+class Player_Tank(Tanks):
+    player_tanks = pygame.sprite.Group()
+
+    def __init__(self, x, y, image_string, speed, controls):
+        Tanks.__init__(self, x, y, image_string, speed)
+        Player_Tank.player_tanks.add(self)
+        self.player_controls = controls
+
+    def motion(self, SCREEN_WIDTH, SCREEN_HEIGHT):
+        predicted_horizontal_location = self.rect.x + self.velocity['horizontal']
+        predicted_vertical_location = self.rect.y + self.velocity['vertical']
+
+        if predicted_horizontal_location < 0:
+            self.velocity['horizontal'] = 0
+        elif predicted_horizontal_location + self.width > SCREEN_WIDTH:
+            self.velocity['horizontal'] = 0
+        elif predicted_vertical_location < 0:
+            self.velocity['vertical'] = 0
+        elif predicted_vertical_location + self.height > SCREEN_HEIGHT:
+            self.velocity['vertical'] = 0
+        self.rect.x += self.velocity['horizontal']
+        self.rect.y += self.velocity['vertical']
